@@ -14,9 +14,9 @@ import type {
 } from '../api/landings';
 import { StaticBackgroundRenderer } from '../components/backgrounds/BackgroundRenderer';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useCurrency } from '../hooks/useCurrency';
 import { cn } from '../lib/utils';
 import { getApiErrorMessage } from '../utils/api-error';
-import { formatPrice } from '../utils/format';
 
 function detectContactType(value: string): 'email' | 'telegram' {
   return value.startsWith('@') ? 'telegram' : 'email';
@@ -247,11 +247,13 @@ function TariffCard({
   isSelected,
   selectedPeriod,
   onSelect,
+  formatPrice,
 }: {
   tariff: LandingTariff;
   isSelected: boolean;
   selectedPeriod: LandingTariffPeriod | undefined;
   onSelect: () => void;
+  formatPrice: (kopeks: number) => string;
 }) {
   const { t } = useTranslation();
 
@@ -472,6 +474,7 @@ function SummaryCard({
   canSubmit,
   submitError,
   onSubmit,
+  formatPrice,
 }: {
   config: LandingConfig;
   selectedTariff: LandingTariff | undefined;
@@ -481,6 +484,7 @@ function SummaryCard({
   canSubmit: boolean;
   submitError: string | null;
   onSubmit: () => void;
+  formatPrice: (kopeks: number) => string;
 }) {
   const { t } = useTranslation();
 
@@ -710,7 +714,13 @@ function DiscountBanner({
 export default function QuickPurchase() {
   const { slug } = useParams<{ slug: string }>();
   const { t, i18n } = useTranslation();
+  const { formatAmount, currencySymbol } = useCurrency();
   const queryClient = useQueryClient();
+
+  const formatPrice = useCallback(
+    (kopeks: number) => `${formatAmount(kopeks / 100, 0)} ${currencySymbol}`,
+    [formatAmount, currencySymbol],
+  );
 
   // Fetch config
   const {
@@ -1047,6 +1057,7 @@ export default function QuickPurchase() {
                         isSelected={tariff.id === selectedTariffId}
                         selectedPeriod={period}
                         onSelect={() => setSelectedTariffId(tariff.id)}
+                        formatPrice={formatPrice}
                       />
                     );
                   })}
@@ -1106,6 +1117,7 @@ export default function QuickPurchase() {
               canSubmit={canSubmit}
               submitError={submitError}
               onSubmit={handleSubmit}
+              formatPrice={formatPrice}
             />
           </motion.div>
         </div>
